@@ -161,6 +161,14 @@ static JSValue module_webserver(JSContext* ctx,
     status(uri);
     status(version);
 
+    if (!strcmp(method, "GET")) {
+        printf("Received a GET request!\n");
+    } else if (!strcmp(method, "POST")) {
+        printf("Received a POST request!\n");
+    } else {
+        printf("Received a request other than GET or POST!\n");
+    }
+
     // https://developer.chrome.com/blog/private-network-access-preflight/
     // https://wicg.github.io/local-network-access/
     char response[] =
@@ -187,6 +195,10 @@ static JSValue module_webserver(JSContext* ctx,
 
     // man popen
     FILE* pipe = popen(command, "r");
+    if (pipe == NULL) {
+        return JS_ThrowInternalError(ctx, "server error (popen): %s",
+                                     strerror(errno));
+    }
 
     for (;;) {
       // man fread

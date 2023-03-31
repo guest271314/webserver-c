@@ -68,7 +68,7 @@ static JSValue module_webserver(JSContext* ctx,
   // man signal.h
   signal(SIGPIPE, SIG_IGN);
   const char* command;
-  /* Convert the command to an UTF-8 string */
+  // Convert the command to an UTF-8 string
   command = JS_ToCString(ctx, argv[0]);
 
   void status(char* str) {
@@ -83,6 +83,7 @@ static JSValue module_webserver(JSContext* ctx,
   // man 7 tcp
   // man socket
   // man sys_socket.h
+  // Create a socket
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd == -1) {
     // man strerror
@@ -93,6 +94,7 @@ static JSValue module_webserver(JSContext* ctx,
   status("socket created successfully");
 
   // man 7 ip
+  // Create the address to bind the socket to
   struct sockaddr_in host_addr;
   int host_addrlen = sizeof(host_addr);
 
@@ -100,16 +102,19 @@ static JSValue module_webserver(JSContext* ctx,
   host_addr.sin_port = htons(PORT);
   host_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+  // Create client address
   struct sockaddr_in client_addr;
   int client_addrlen = sizeof(client_addr);
 
   // man bind
+  // Bind the socket to the address
   if (bind(sockfd, (struct sockaddr*)&host_addr, host_addrlen) != 0) {
     return JS_ThrowInternalError(ctx, "webserver (bind): %s", strerror(errno));
   }
   status("socket successfully bound to address");
 
   // man 2 listen
+  // Listen for incoming connections
   if (listen(sockfd, SOMAXCONN) != 0) {
     return JS_ThrowInternalError(ctx, "webserver (listen): %s",
                                  strerror(errno));
@@ -126,6 +131,7 @@ static JSValue module_webserver(JSContext* ctx,
     }
     status("connection accepted");
     // man getsockname
+    // Get client address
     int sockn = getsockname(request, (struct sockaddr*)&client_addr,
                             (socklen_t*)&client_addrlen);
     if (sockn < 0) {
@@ -135,6 +141,7 @@ static JSValue module_webserver(JSContext* ctx,
     }
 
     // man 2 read
+    // Read from the socket
     int readable = read(request, buffer, BUFFER_SIZE);
     if (readable < 0) {
       JS_ThrowInternalError(ctx, "server error (read): %s", strerror(errno));
@@ -144,6 +151,7 @@ static JSValue module_webserver(JSContext* ctx,
     // man sscanf
     // man inet_ntoa
     // man ntohs
+    // Read the request
     char method[BUFFER_SIZE], uri[BUFFER_SIZE], version[BUFFER_SIZE];
     sscanf(buffer, "%s %s %s", method, uri, version);
 
@@ -166,6 +174,7 @@ static JSValue module_webserver(JSContext* ctx,
 
     // man 2 write
     // man 3 strlen
+    // Write to the socket
     int writer = write(request, response, strlen(response));
 
     if (writer < 0) {

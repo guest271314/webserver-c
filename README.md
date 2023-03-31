@@ -13,7 +13,7 @@ $ gcc -L./quickjs -fvisibility=hidden -shared -I ./quickjs -g -ggdb -O -Wall web
 
 ## JavaScript signature
 ```javascript
-#!/usr/bin/env -S ./qjs --std
+#!/usr/bin/env -S ./qjs -m --std
 import {webserver} from './webserver.so';
 try {
   webserver('parec -d @DEFAULT_MONITOR@', (status) => {
@@ -28,7 +28,7 @@ try {
 ## CLI server usage
 
 ```bash
-$ ./qjs -m ./webserver.js
+$ ./qjs -m --std ./webserver.js
 ```
 
 ## Client usage

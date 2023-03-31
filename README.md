@@ -1,6 +1,6 @@
 # QuickJS webserver-c
 
-A simple QuickJS HTTP streaming webserver module written in C.
+A simple QuickJS HTTP streaming Web server module written in C.
 
 This project is the modified example code that is used for the article:
 [Making a simple HTTP webserver in C](https://bruinsslot.jp/post/simple-http-webserver-in-c/).

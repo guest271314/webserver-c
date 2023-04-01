@@ -200,6 +200,7 @@ static JSValue module_webserver(JSContext* ctx,
 
       if (stream < 0) {
         // man pclose
+        status(ctx, argv[1], "write() failed: Broken pipe");
         pclose(pipe);
         break;
       }

@@ -57,6 +57,14 @@
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
+void status(JSContext* ctx, JSValue this_val, char* str) {
+  JSValue callback, params[1];
+  params[0] = JS_NewString(ctx, str);
+  callback = JS_Call(ctx, this_val, JS_UNDEFINED, 1, params);
+  JS_FreeValue(ctx, callback);
+  JS_FreeValue(ctx, params[0]);
+}
+
 static JSValue module_webserver(JSContext* ctx,
                                 JSValueConst this_val,
                                 int argc,
@@ -71,14 +79,6 @@ static JSValue module_webserver(JSContext* ctx,
   // Convert the command to an UTF-8 string
   command = JS_ToCString(ctx, argv[0]);
 
-  void status(char* str) {
-    JSValue callback, params[1];
-    params[0] = JS_NewString(ctx, str);
-    callback = JS_Call(ctx, argv[1], JS_UNDEFINED, 1, params);
-    JS_FreeValue(ctx, callback);
-    JS_FreeValue(ctx, params[0]);
-  }
-
   char buffer[BUFFER_SIZE];
   // man 7 tcp
   // man socket
@@ -91,7 +91,7 @@ static JSValue module_webserver(JSContext* ctx,
     return JS_ThrowInternalError(ctx, "server error (socket): %s",
                                  strerror(errno));
   }
-  status("socket created successfully");
+  status(ctx, argv[1], "socket created successfully");
 
   // man 7 ip
   // Create the address to bind the socket to
@@ -111,16 +111,16 @@ static JSValue module_webserver(JSContext* ctx,
   if (bind(sockfd, (struct sockaddr*)&host_addr, host_addrlen) != 0) {
     return JS_ThrowInternalError(ctx, "webserver (bind): %s", strerror(errno));
   }
-  status("socket successfully bound to address");
-
+  status(ctx, argv[1], "socket successfully bound to address");
+  
   // man 2 listen
   // Listen for incoming connections
   if (listen(sockfd, SOMAXCONN) != 0) {
     return JS_ThrowInternalError(ctx, "webserver (listen): %s",
                                  strerror(errno));
   }
-  status("server listening for connections");
-
+  status(ctx, argv[1], "server listening for connections");
+  
   for (;;) {
     // man 2 accept
     int request =
@@ -129,7 +129,8 @@ static JSValue module_webserver(JSContext* ctx,
       JS_ThrowInternalError(ctx, "server error (accept): %s", strerror(errno));
       continue;
     }
-    status("connection accepted");
+    status(ctx, argv[1], "connection accepted");    
+    
     // man getsockname
     // Get client address
     int sockn = getsockname(request, (struct sockaddr*)&client_addr,
@@ -155,11 +156,11 @@ static JSValue module_webserver(JSContext* ctx,
     char method[BUFFER_SIZE], uri[BUFFER_SIZE], version[BUFFER_SIZE];
     sscanf(buffer, "%s %s %s", method, uri, version);
 
-    status((char*)inet_ntoa(client_addr.sin_addr));
+    status(ctx, argv[1], (char*)inet_ntoa(client_addr.sin_addr));    
     // TODO: Convert ntohs(client_addr.sin_port) to string; should be PORT
-    status(method);
-    status(uri);
-    status(version);
+    status(ctx, argv[1], method);
+    status(ctx, argv[1], uri);
+    status(ctx, argv[1], version);
 
     // https://developer.chrome.com/blog/private-network-access-preflight/
     // https://wicg.github.io/local-network-access/

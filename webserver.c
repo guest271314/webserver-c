@@ -161,14 +161,6 @@ static JSValue module_webserver(JSContext* ctx,
     status(uri);
     status(version);
 
-    if (!strcmp(method, "GET")) {
-        printf("Received a GET request!\n");
-    } else if (!strcmp(method, "POST")) {
-        printf("Received a POST request!\n");
-    } else {
-        printf("Received a request other than GET or POST!\n");
-    }
-
     // https://developer.chrome.com/blog/private-network-access-preflight/
     // https://wicg.github.io/local-network-access/
     char response[] =

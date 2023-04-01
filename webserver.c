@@ -189,7 +189,7 @@ static JSValue module_webserver(JSContext* ctx,
     // man popen
     FILE* pipe = popen(command, "r");
     if (pipe == NULL) {
-        return JS_ThrowInternalError(ctx, "server error (popen): %s",
+      return JS_ThrowInternalError(ctx, "server error (popen): %s",
                                      strerror(errno));
     }
 

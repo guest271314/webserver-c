@@ -8,15 +8,11 @@
 // https://github.com/jpbruinsslot/webserver-c
 //
 // Compile with 
-// gcc -L./quickjs -fvisibility=hidden -shared -I ./quickjs
-// -g -ggdb -O -Wall webserver.c -o webserver.so
+// clang -Wall -L./quickjs -fvisibility=hidden -shared -I ./quickjs -g -ggdb -O webserver.c -o webserver.so
 // 
 // JavaScript signature
 // webserver(command, callback)
 // Reads as long as the pipe is open
-//
-// CLI server usage
-// ./webserver "parec -d @DEFAULT_MONITOR"
 //
 // Client usage 
 // fetch('http://localhost:8080')
@@ -160,54 +156,85 @@ static JSValue module_webserver(JSContext* ctx,
     status(ctx, argv[1], uri);
     status(ctx, argv[1], version);
 
-    // https://developer.chrome.com/blog/private-network-access-preflight/
-    // https://wicg.github.io/local-network-access/
-    char response[] =
-        "HTTP/1.1 200 OK\r\n"
-        "Server: webserver-c\r\n"
-        "Access-Control-Allow-Headers: cache-control\r\n"
-        "Cache-Control: no-store\r\n"
-        "Access-Control-Allow-Origin: *\r\n"
-        "Content-type: application/octet-stream\r\n"
-        "Access-Control-Allow-Private-Network: true\r\n\r\n";
+    if (!strcmp(method, "OPTIONS")) {
+      // https://developer.chrome.com/blog/private-network-access-preflight/
+      // https://wicg.github.io/local-network-access/
+      char response[] =
+          "HTTP/1.1 200 OK\r\n"
+          "Server: webserver-c\r\n"
+          "Cross-Origin-Opener-Policy: unsafe-none\r\n"
+          "Cross-Origin-Embedder-Policy: unsafe-none\r\n"
+          "Access-Control-Allow-Headers: cache-control\r\n"
+          "Access-Control-Allow-Methods: OPTIONS,GET\r\n"
+          "Cache-Control: no-store\r\n"
+          "Access-Control-Allow-Origin: *\r\n"
+          "Content-type: application/octet-stream\r\n"
+          "Access-Control-Allow-Private-Network: true\r\n\r\n";
 
-    // man 2 write
-    // man 3 strlen
-    // Write to the socket
-    int writer = write(request, response, strlen(response));
+      // man 2 write
+      // man 3 strlen
+      int writer = write(request, response, strlen(response));
 
-    if (writer < 0) {
-      return JS_ThrowInternalError(ctx, "server error (write): %s",
-                                   strerror(errno));
-    }
-    // 441 * 4
-    // https://www1.cs.columbia.edu/~hgs/audio/44.1.html
-    uint8_t writable[1764];
-
-    // man popen
-    FILE* pipe = popen(command, "r");
-    if (pipe == NULL) {
-      return JS_ThrowInternalError(ctx, "server error (popen): %s",
+      if (writer < 0) {
+        return JS_ThrowInternalError(ctx, "server error (write): %s",
                                      strerror(errno));
-    }
-
-    for (;;) {
-      // man fread
-      size_t count = fread(writable, 1, sizeof(writable), pipe);
-      int stream = write(request, writable, count);
-
-      if (stream < 0) {
-        // man pclose
-        status(ctx, argv[1], "write() failed: Broken pipe");
-        pclose(pipe);
-        break;
       }
+      close(request);
+      continue;
     }
-    // man 2 close
-    close(request);
-    // Free command string
-    JS_FreeCString(ctx, command);
-    break;
+
+    if (!strcmp(method, "GET")) {
+      // https://developer.chrome.com/blog/private-network-access-preflight/
+      // https://wicg.github.io/local-network-access/
+      char response[] =
+          "HTTP/1.1 200 OK\r\n"
+          "Server: webserver-c\r\n"
+          "Cross-Origin-Opener-Policy: unsafe-none\r\n"
+          "Cross-Origin-Embedder-Policy: unsafe-none\r\n"
+          "Access-Control-Allow-Headers: cache-control\r\n"
+          "Access-Control-Allow-Methods: OPTIONS,GET\r\n"
+          "Cache-Control: no-store\r\n"
+          "Access-Control-Allow-Origin: *\r\n"
+          "Content-type: application/octet-stream\r\n"
+          "Access-Control-Allow-Private-Network: true\r\n\r\n";
+
+      // man 2 write
+      // man 3 strlen
+      int writer = write(request, response, strlen(response));
+
+      if (writer < 0) {
+        return JS_ThrowInternalError(ctx, "server error (write): %s",
+                                     strerror(errno));
+      }
+      // 441 * 4
+      // https://www1.cs.columbia.edu/~hgs/audio/44.1.html
+      uint8_t writable[1764];
+
+      // man popen
+      FILE* pipe = popen(command, "r");
+      if (pipe == NULL) {
+        return JS_ThrowInternalError(ctx, "server error (popen): %s",
+                                     strerror(errno));
+      }
+
+      for (;;) {
+        // man fread
+        size_t count = fread(writable, 1, sizeof(writable), pipe);
+        int stream = write(request, writable, count);
+
+        if (stream < 0) {
+          // man pclose    
+          pclose(pipe);
+          status(ctx, argv[1], "aborted");
+          break;
+        }
+      }
+      // man 2 close
+      close(request);
+      // Free command string
+      JS_FreeCString(ctx, command);
+      break;
+    }
   }
 
   return JS_UNDEFINED;

@@ -155,22 +155,22 @@ static JSValue module_webserver(JSContext* ctx,
     status(ctx, argv[1], method);
     status(ctx, argv[1], uri);
     status(ctx, argv[1], version);
+    
+    // https://developer.chrome.com/blog/private-network-access-preflight/
+    // https://wicg.github.io/local-network-access/
+    char response[] =
+      "HTTP/1.1 200 OK\r\n"
+      "Server: webserver-c\r\n"
+      "Cross-Origin-Opener-Policy: unsafe-none\r\n"
+      "Cross-Origin-Embedder-Policy: unsafe-none\r\n"
+      "Access-Control-Allow-Headers: cache-control\r\n"
+      "Access-Control-Allow-Methods: OPTIONS,GET\r\n"
+      "Cache-Control: no-store\r\n"
+      "Access-Control-Allow-Origin: *\r\n"
+      "Content-type: application/octet-stream\r\n"
+      "Access-Control-Allow-Private-Network: true\r\n\r\n";
 
     if (!strcmp(method, "OPTIONS")) {
-      // https://developer.chrome.com/blog/private-network-access-preflight/
-      // https://wicg.github.io/local-network-access/
-      char response[] =
-          "HTTP/1.1 200 OK\r\n"
-          "Server: webserver-c\r\n"
-          "Cross-Origin-Opener-Policy: unsafe-none\r\n"
-          "Cross-Origin-Embedder-Policy: unsafe-none\r\n"
-          "Access-Control-Allow-Headers: cache-control\r\n"
-          "Access-Control-Allow-Methods: OPTIONS,GET\r\n"
-          "Cache-Control: no-store\r\n"
-          "Access-Control-Allow-Origin: *\r\n"
-          "Content-type: application/octet-stream\r\n"
-          "Access-Control-Allow-Private-Network: true\r\n\r\n";
-
       // man 2 write
       // man 3 strlen
       int writer = write(request, response, strlen(response));
@@ -184,20 +184,6 @@ static JSValue module_webserver(JSContext* ctx,
     }
 
     if (!strcmp(method, "GET")) {
-      // https://developer.chrome.com/blog/private-network-access-preflight/
-      // https://wicg.github.io/local-network-access/
-      char response[] =
-          "HTTP/1.1 200 OK\r\n"
-          "Server: webserver-c\r\n"
-          "Cross-Origin-Opener-Policy: unsafe-none\r\n"
-          "Cross-Origin-Embedder-Policy: unsafe-none\r\n"
-          "Access-Control-Allow-Headers: cache-control\r\n"
-          "Access-Control-Allow-Methods: OPTIONS,GET\r\n"
-          "Cache-Control: no-store\r\n"
-          "Access-Control-Allow-Origin: *\r\n"
-          "Content-type: application/octet-stream\r\n"
-          "Access-Control-Allow-Private-Network: true\r\n\r\n";
-
       // man 2 write
       // man 3 strlen
       int writer = write(request, response, strlen(response));

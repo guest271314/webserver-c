@@ -16,6 +16,7 @@ $ clang -Wall -L./quickjs -fvisibility=hidden -shared \
 ## JavaScript signature
 ```javascript
 #!/usr/bin/env -S ./qjs -m --std
+// webserver.js
 import {webserver} from './webserver.so';
 try {
   webserver('parec -d @DEFAULT_MONITOR@', (status) => {

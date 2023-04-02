@@ -14,6 +14,9 @@
 // webserver(command, callback)
 // Reads as long as the pipe is open
 //
+// CLI usage
+// ./qjs -m --std ./webserver.js "./stream"
+//
 // Client usage 
 // fetch('http://localhost:8080')
 //

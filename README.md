@@ -19,7 +19,7 @@ $ clang -Wall -L./quickjs -fvisibility=hidden -shared \
 // webserver.js
 import {webserver} from './webserver.so';
 try {
-  webserver('parec -d @DEFAULT_MONITOR@', (status) => {
+  webserver(scriptArgs[1], (status) => {
     console.log(status);
     if (status === 'aborted') {
       std.exit(0);
@@ -31,10 +31,10 @@ try {
 // Reads as long as the pipe is open (until request is aborted)
 ```
 
-## CLI server usage
+## CLI usage
 
 ```bash
-$ ./qjs -m --std ./webserver.js
+$ ./qjs -m --std ./webserver.js "./stream"
 ```
 
 ## Client usage

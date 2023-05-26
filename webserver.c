@@ -76,7 +76,6 @@ static JSValue module_webserver(JSContext* ctx,
   // Convert the command to an UTF-8 string
   command = JS_ToCString(ctx, argv[0]);
 
-  char buffer[BUFFER_SIZE];
   // man 7 tcp
   // man socket
   // man sys_socket.h
@@ -137,6 +136,8 @@ static JSValue module_webserver(JSContext* ctx,
                             strerror(errno));
       continue;
     }
+    
+    char buffer[BUFFER_SIZE];
 
     // man 2 read
     // Read from the socket
